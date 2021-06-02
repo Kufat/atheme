@@ -1,0 +1,24 @@
+Help for SET GENDER:
+
+SET GENDER sets or clears gender identify information associated with
+your account, which will be visible in your WHOIS and &nick& INFO 
+information. The information you enter will be prfixed with "identifies as:"
+when displayed; do not enter this part.
+
+Using SET GENDER without a description clears gender identity information.
+
+Syntax: SET GENDER [DESCRIPTION]
+
+Examples of setting gender identity information:
+    /msg &nick& SET GENDER female
+    /msg &nick& SET GENDER gender non-conforming
+
+For the above, a /WHOIS would show:
+ExampleUser1 identifies as: female
+ExampleUser2 identifies as: gender non-conforming
+
+Example of clearing gender information:
+    /msg &nick& SET GENDER
+
+04,01WARNING: Adding joke or offensive information will result in 
+disciplinary action.

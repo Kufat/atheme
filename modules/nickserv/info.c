@@ -315,7 +315,7 @@ ns_cmd_info(struct sourceinfo *si, int parc, char *parv[])
 	unsigned int mdcount = 0;
 	MOWGLI_PATRICIA_FOREACH(md, &state, atheme_object(mu)->metadata)
 	{
-		if (!strncmp(md->name, "private:", 8))
+		if (!strncmp(md->name, "private:", 8) && !has_priv(si, PRIV_METADATA))
 			continue;
 		if (show_custom_metadata)
 			command_success_nodata(si, _("Metadata   : %s = %s"),
