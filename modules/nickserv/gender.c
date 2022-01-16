@@ -22,7 +22,7 @@
   
 #include <atheme.h>
 
-const char* const bannedwords[] = {"apache", "attack", "helicopter", "testbadword"};
+const char* const bannedwords[] = {"apache", "attack", "helicopter"};
 int bannedwordcount = sizeof(bannedwords) / sizeof(bannedwords[0]);
 
 static void
@@ -58,7 +58,7 @@ user_identify_hook(struct user *u)
     }
 }
 
-// SET GENDER <a word or phrase>
+// GENDER <a word or phrase>
 
 static void
 ns_cmd_gender(struct sourceinfo *si, int parc, char *parv[])
@@ -77,7 +77,7 @@ ns_cmd_gender(struct sourceinfo *si, int parc, char *parv[])
 		}
 
 		metadata_delete(si->smu, "private:gender");
-		logcommand(si, CMDLOG_SET, "SET:GENDER:REMOVE");
+		logcommand(si, CMDLOG_SET, "GENDER:REMOVE");
 		command_success_nodata(si, _("Your gender entry has been deleted."));
         inspircd_send_meta(si->su->uid, "");
 		return;
@@ -92,16 +92,16 @@ ns_cmd_gender(struct sourceinfo *si, int parc, char *parv[])
                      fault_badparams, 
                      _("The word '%s' is on the banned words list for %s."),
                      bannedwords[i],
-                     "SET GENDER");
-			logcommand(si, CMDLOG_SET, "SET:GENDER: Troll gender \2%s\2", gender);
-			kill_user(si->service->me, si->su, "%s", "Ha ha. Very funny.");
-
+                     "GENDER");
+			logcommand(si, CMDLOG_SET, "GENDER: Troll gender \2%s\2", gender);
+			kill_user(si->service->me, si->su, "%s", "User attempted to set a gender containing "
+													 "a word on the disallow list.");
 			return;
 		}
 	}
 
 	metadata_add(si->smu, "private:gender", gender);
-	logcommand(si, CMDLOG_SET, "SET:GENDER: \2%s\2", gender);
+	logcommand(si, CMDLOG_SET, "GENDER: \2%s\2", gender);
     inspircd_send_meta(si->su->uid, gender);
 	command_success_nodata(si, _("Your gender is now set to \2%s\2."), gender);
 }
@@ -123,7 +123,7 @@ mod_init(struct module *const restrict m)
 
 	MODULE_TRY_REQUEST_DEPENDENCY(m, "nickserv/main")
 
-	(void) service_named_bind_command("nickserv", ns_gender);
+	(void) service_named_bind_command("nickserv", &ns_gender);
 }
 
 static void

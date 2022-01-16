@@ -23,6 +23,7 @@ SRCS   =                    \
     drop.c                  \
     enforce.c               \
     freeze.c                \
+    gender.c                \
     ghost.c                 \
     group.c                 \
     help.c                  \
@@ -57,7 +58,6 @@ SRCS   =                    \
     set_email.c             \
     set_emailmemos.c        \
     set_enforcetime.c       \
-    set_gender.c            \
     set_hidelastlogin.c     \
     set_hidemail.c          \
     set_language.c          \
@@ -70,7 +70,6 @@ SRCS   =                    \
     set_password.c          \
     set_private.c           \
     set_privmsg.c           \
-    set_pronouns.c          \
     set_property.c          \
     set_pubkey.c            \
     set_quietchg.c          \

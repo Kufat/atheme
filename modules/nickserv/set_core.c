@@ -59,7 +59,7 @@ static struct command ns_set = {
 	.name           = "SET",
 	.desc           = N_("Sets various account parameters."),
 	.access         = AC_AUTHENTICATED,
-	.maxparc        = 20,
+	.maxparc        = 2,
 	.cmd            = &ns_cmd_set,
 	.help           = { .func = &ns_help_set },
 };
