@@ -46,7 +46,7 @@ struct pronoun_def pronoun_defs[] =
         "private:pronouns:accepted", "pronounAccepted"},
     {"UNACCEPTED", _("does NOT accept the following pronouns"), 
         "private:pronouns:unaccepted", "pronounNotAccepted"},
-    {NULL, _("uses the following pronouns"), 
+    {NULL, _("uses the following pronouns"), // default must be last (see above)
         "private:pronouns", "pronoun"}
 };
 
@@ -282,7 +282,7 @@ do_set_pronouns(struct sourceinfo *si,
     inspircd_send_meta(si->su->uid, def->inspircd_metakey, buf);
 }
 
-// SET PRONOUNS [ACCEPTED|UNACCEPTED] [PRONOUN]*
+// PRONOUNS [ACCEPTED|UNACCEPTED] [PRONOUN]*
 
 static void
 ns_cmd_set_pronouns(struct sourceinfo *si, int parc, char *parv[])
@@ -317,9 +317,9 @@ static struct command ns_set_pronouns = {
 	.name           = "PRONOUNS",
 	.desc           = N_("Set pronouns."),
 	.access         = AC_NONE,
-	.maxparc        = ( MAX_VALS + 2 ),
+	.maxparc        = ( MAX_VALS + 2 ), // 
 	.cmd            = &ns_cmd_set_pronouns,
-	.help           = { .path = "nickserv/set_pronouns" },
+	.help           = { .path = "nickserv/pronouns" },
 };
 
 static void

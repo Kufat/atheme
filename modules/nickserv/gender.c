@@ -21,6 +21,8 @@
   */
   
 #include <atheme.h>
+#include <uplink.h>
+#include <hook.h>
 
 const char* const bannedwords[] = {"apache", "attack", "helicopter"};
 int bannedwordcount = sizeof(bannedwords) / sizeof(bannedwords[0]);
