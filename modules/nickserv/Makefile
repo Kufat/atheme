@@ -17,6 +17,7 @@ BASE_SRCS =			\
 	drop.c	\
 	enforce.c	\
 	freeze.c	\
+	gender.c    \
 	ghost.c	\
 	group.c	\
 	help.c	\
@@ -33,6 +34,7 @@ BASE_SRCS =			\
 	logout.c	\
 	mark.c	\
 	multimark.c	\
+	pronouns.c  \
 	register.c	\
 	regnolimit.c	\
 	resetpass.c	\
