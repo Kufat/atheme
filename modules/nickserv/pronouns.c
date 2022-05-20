@@ -124,9 +124,13 @@ user_identify_hook(user_t *u)
         
         if(md = metadata_find(u->myuser, cur->metadata_key))
         {
-            stringify_pronouns(md->value, ", ", buf, BIG_BUF_LEN);
-			inspircd_send_meta(u->uid, cur->inspircd_metakey, buf);
+        	stringify_pronouns(md->value, ", ", buf, BIG_BUF_LEN);
+		inspircd_send_meta(u->uid, cur->inspircd_metakey, buf);
         }
+	else
+	{
+		inspircd_send_meta(u->uid, cur->inspircd_metakey, "");
+	}
     }
 }
 
