@@ -198,6 +198,7 @@ static void ns_cmd_register(sourceinfo_t *si, int parc, char *parv[])
 		}
 
 		command_success_nodata(si, _("An email containing nickname activation instructions has been sent to \2%s\2."), mu->email);
+		command_success_nodata(si, _("Your mail provider may direct the message to 'spam' or 'promotions', so we recommend searching for '%s'."), me.netname);
 		command_success_nodata(si, _("If you do not complete registration within one day, your nickname will expire."));
 
 		free(key);
