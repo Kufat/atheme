@@ -1,8 +1,8 @@
 Help for PRONOUNS:
 
-PRONOUNS sets or clears pronouns associated with your account, 
+PRONOUNS sets or clears pronouns associated with your account,
 which will be visible in your WHOIS and &nick& INFO information.
-Pronouns should be separated by spaces. Specifying an empty list 
+Pronouns should be separated by spaces. Specifying an empty list
 will clear pronouns. Use of this feature is optional.
 
 You may also set accepted or unaccepted pronouns. These lists may
