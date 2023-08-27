@@ -196,6 +196,60 @@ jsonrpcmethod_login(void *conn, mowgli_list_t *params, char *id)
 	return true;
 }
 
+/* atheme.renew
+ *
+ * JSON inputs:
+ *       authcookie, and account name.
+ *
+ * JSON outputs:
+ *       fault 1 - insufficient parameters
+ *       fault 3 - unknown user
+ *       fault 15 - validation failed
+ *       default - success message
+ *
+ * JSON Effects:
+ *       an authcookie ticket is renewed, or destroyed if it had already expired.
+ */
+static bool
+jsonrpcmethod_renew(void *conn, mowgli_list_t *params, char *id)
+{
+	struct authcookie *ac;
+	struct myuser *mu;
+	char *accountname;
+	char *cookie;
+
+	size_t len = MOWGLI_LIST_LENGTH(params);
+
+	if (len < 2)
+	{
+		jsonrpc_failure_string(conn, fault_needmoreparams, "Insufficient parameters.", id);
+		return false;
+	}
+
+	cookie = mowgli_node_nth_data(params, 0);
+	accountname = mowgli_node_nth_data(params, 1);
+
+	if ((mu = myuser_find(accountname)) == NULL)
+	{
+		jsonrpc_failure_string(conn, fault_nosuch_source, "Unknown user.", id);
+		return false;
+	}
+
+	if (authcookie_validate(cookie, mu, &ac) == false)
+	{
+		jsonrpc_failure_string(conn, fault_badauthcookie, "Invalid authcookie for this account.", id);
+		return false;
+	}
+
+	logcommand_external(nicksvs.me, "jsonrpc", conn, NULL, mu, CMDLOG_LOGIN, "RENEW");
+
+	authcookie_renew(ac);
+
+	jsonrpc_success_string(conn, "Authcookie renewed successfully.", id);
+
+	return 0;
+}
+
 /* atheme.logout
  *
  * JSON inputs:
@@ -219,8 +273,6 @@ jsonrpcmethod_logout(void *conn, mowgli_list_t *params, char *id)
 	char *cookie;
 
 	size_t len = MOWGLI_LIST_LENGTH(params);
-	cookie = mowgli_node_nth_data(params, 0);
-	accountname = mowgli_node_nth_data(params, 1);
 
 	if (len < 2)
 	{
@@ -228,13 +280,16 @@ jsonrpcmethod_logout(void *conn, mowgli_list_t *params, char *id)
 		return false;
 	}
 
+	cookie = mowgli_node_nth_data(params, 0);
+	accountname = mowgli_node_nth_data(params, 1);
+
 	if ((mu = myuser_find(accountname)) == NULL)
 	{
 		jsonrpc_failure_string(conn, fault_nosuch_source, "Unknown user.", id);
 		return false;
 	}
 
-	if (authcookie_validate(cookie, mu) == false)
+	if (authcookie_validate(cookie, mu, &ac) == false)
 	{
 		jsonrpc_failure_string(conn, fault_badauthcookie, "Invalid authcookie for this account.", id);
 		return false;
@@ -242,7 +297,6 @@ jsonrpcmethod_logout(void *conn, mowgli_list_t *params, char *id)
 
 	logcommand_external(nicksvs.me, "jsonrpc", conn, NULL, mu, CMDLOG_LOGIN, "LOGOUT");
 
-	ac = authcookie_find(cookie, mu);
 	authcookie_destroy(ac);
 
 	jsonrpc_success_string(conn, "You are now logged out.", id);
@@ -277,6 +331,13 @@ jsonrpcmethod_command(void *conn, mowgli_list_t *params, char *id)
 	char *accountname, *cookie, *service, *command, *sourceip;
 
 	size_t len = MOWGLI_LIST_LENGTH(params);
+
+	if (len < 5)
+	{
+		jsonrpc_failure_string(conn, fault_needmoreparams, "Insufficient parameters.", id);
+		return 0;
+	}
+
 	cookie = mowgli_node_nth_data(params, 0);
 	accountname = mowgli_node_nth_data(params, 1);
 	sourceip = mowgli_node_nth_data(params, 2);
@@ -297,12 +358,6 @@ jsonrpcmethod_command(void *conn, mowgli_list_t *params, char *id)
 		}
 	}
 
-	if (len < 5)
-	{
-		jsonrpc_failure_string(conn, fault_needmoreparams, "Insufficient parameters.", id);
-		return 0;
-	}
-
 	if (*accountname != '\0' && strlen(cookie) > 1)
 	{
 		if ((mu = myuser_find(accountname)) == NULL)
@@ -311,7 +366,7 @@ jsonrpcmethod_command(void *conn, mowgli_list_t *params, char *id)
 			return 0;
 		}
 
-		if (authcookie_validate(cookie, mu) == false)
+		if (authcookie_validate(cookie, mu, NULL) == false)
 		{
 			jsonrpc_failure_string(conn, fault_badauthcookie, "Invalid authcookie for this account.", id);
 			return 0;
@@ -394,6 +449,13 @@ jsonrpcmethod_privset(void *conn, mowgli_list_t *params, char *id)
 	char *param, *accountname, *cookie;
 
 	size_t len = MOWGLI_LIST_LENGTH(params);
+
+	if (len < 2)
+	{
+		jsonrpc_failure_string(conn, fault_needmoreparams, "Insufficient parameters.", id);
+		return 0;
+	}
+
 	cookie = mowgli_node_nth_data(params, 0);
 	accountname = mowgli_node_nth_data(params, 1);
 
@@ -408,12 +470,6 @@ jsonrpcmethod_privset(void *conn, mowgli_list_t *params, char *id)
 		}
 	}
 
-	if (len < 2)
-	{
-		jsonrpc_failure_string(conn, fault_needmoreparams, "Insufficient parameters.", id);
-		return 0;
-	}
-
 	if (*accountname != '\0' && strlen(cookie) > 1)
 	{
 		if ((mu = myuser_find(accountname)) == NULL)
@@ -422,7 +478,7 @@ jsonrpcmethod_privset(void *conn, mowgli_list_t *params, char *id)
 			return 0;
 		}
 
-		if (authcookie_validate(cookie, mu) == false)
+		if (authcookie_validate(cookie, mu, NULL) == false)
 		{
 			jsonrpc_failure_string(conn, fault_badauthcookie, "Invalid authcookie for this account.", id);
 			return 0;
@@ -459,9 +515,16 @@ jsonrpcmethod_ison(void *conn, mowgli_list_t *params, char *id)
 	struct user *u;
 
 	char *param, *user;
-	user = mowgli_node_nth_data(params, 0);
 
 	size_t len = MOWGLI_LIST_LENGTH(params);
+
+	if (len < 1)
+	{
+		jsonrpc_failure_string(conn, fault_needmoreparams, "Insufficient parameters.", id);
+		return 0;
+	}
+
+	user = mowgli_node_nth_data(params, 0);
 	mowgli_node_t *n;
 
 	MOWGLI_LIST_FOREACH(n, params->head)
@@ -473,13 +536,6 @@ jsonrpcmethod_ison(void *conn, mowgli_list_t *params, char *id)
 			jsonrpc_failure_string(conn, fault_badparams, "Invalid authcookie for this account.", id);
 			return 0;
 		}
-	}
-
-
-	if (len < 1)
-	{
-		jsonrpc_failure_string(conn, fault_needmoreparams, "Insufficient parameters.", id);
-		return 0;
 	}
 
 	u = user_find(user);
@@ -548,11 +604,17 @@ jsonrpcmethod_metadata(void *conn, mowgli_list_t *params, char *id)
 	struct metadata *md;
 
 	char *param, *name, *metadata;
+	size_t len = MOWGLI_LIST_LENGTH(params);
+
+	if (len < 2)
+	{
+		jsonrpc_failure_string(conn, fault_needmoreparams, "Insufficient parameters.", id);
+		return 0;
+	}
 
 	name = mowgli_node_nth_data(params, 0);
 	metadata = mowgli_node_nth_data(params, 1);
 
-	size_t len = MOWGLI_LIST_LENGTH(params);
 	mowgli_node_t *n;
 
 	MOWGLI_LIST_FOREACH(n, params->head)
@@ -564,12 +626,6 @@ jsonrpcmethod_metadata(void *conn, mowgli_list_t *params, char *id)
 			jsonrpc_failure_string(conn, fault_badparams, "Invalid authcookie for this account.", id);
 			return 0;
 		}
-	}
-
-	if (len < 2)
-	{
-		jsonrpc_failure_string(conn, fault_needmoreparams, "Insufficient parameters.", id);
-		return 0;
 	}
 
 	if (*name == '#')
@@ -663,6 +719,7 @@ mod_init(struct module *const restrict m)
 
 	jsonrpc_register_method("atheme.login", jsonrpcmethod_login);
 	jsonrpc_register_method("atheme.logout", jsonrpcmethod_logout);
+	jsonrpc_register_method("atheme.renew", jsonrpcmethod_renew);
 	jsonrpc_register_method("atheme.command", jsonrpcmethod_command);
 
 	jsonrpc_register_method("atheme.privset", jsonrpcmethod_privset);
@@ -678,6 +735,7 @@ mod_deinit(const enum module_unload_intent ATHEME_VATTR_UNUSED intent)
 
 	jsonrpc_unregister_method("atheme.login");
 	jsonrpc_unregister_method("atheme.logout");
+	jsonrpc_unregister_method("atheme.renew");
 	jsonrpc_unregister_method("atheme.command");
 
 	jsonrpc_unregister_method("atheme.privset");

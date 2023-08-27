@@ -26,9 +26,10 @@ struct authcookie
 void authcookie_init(void);
 struct authcookie *authcookie_create(struct myuser *mu);
 struct authcookie *authcookie_find(const char *ticket, struct myuser *myuser);
+void authcookie_renew(struct authcookie *ac);
 void authcookie_destroy(struct authcookie *ac);
 void authcookie_destroy_all(struct myuser *mu);
-bool authcookie_validate(const char *ticket, struct myuser *myuser) ATHEME_FATTR_WUR;
+bool authcookie_validate(const char *ticket, struct myuser *myuser, struct authcookie **ac_ret) ATHEME_FATTR_WUR;
 void authcookie_expire(void *arg);
 
 #endif /* !ATHEME_INC_AUTHCOOKIE_H */

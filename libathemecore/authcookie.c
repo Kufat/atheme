@@ -113,6 +113,21 @@ authcookie_find(const char *ticket, struct myuser *myuser)
 }
 
 /*
+ * authcookie_renew()
+ *
+ * Inputs:
+ *       a validated authcookie to renew
+ *
+ * Side Effects:
+ *       an authcookie is renewed
+ */
+void
+authcookie_renew(struct authcookie *ac)
+{
+	ac->expire = CURRTIME + SECONDS_PER_HOUR;
+}
+
+/*
  * authcookie_destroy()
  *
  * Inputs:
@@ -194,6 +209,7 @@ authcookie_expire(void *arg)
  *
  * Inputs:
  *       a ticket and myuser pair that needs to be validated
+ *       a pointer to return the authcookie if valid (NULL if unneeded)
  *
  * Outputs:
  *       true if the authcookie is valid,
@@ -203,7 +219,7 @@ authcookie_expire(void *arg)
  *       expired authcookies are destroyed here
  */
 bool ATHEME_FATTR_WUR
-authcookie_validate(const char *ticket, struct myuser *myuser)
+authcookie_validate(const char *ticket, struct myuser *myuser, struct authcookie **ac_ret)
 {
 	struct authcookie *ac = authcookie_find(ticket, myuser);
 
@@ -215,6 +231,9 @@ authcookie_validate(const char *ticket, struct myuser *myuser)
 		authcookie_destroy(ac);
 		return false;
 	}
+
+	if (ac_ret != NULL)
+		*ac_ret = ac;
 
 	return true;
 }

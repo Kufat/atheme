@@ -228,6 +228,53 @@ xmlrpcmethod_login(void *conn, int parc, char *parv[])
 	return 0;
 }
 
+/* atheme.renew
+ *
+ * XML inputs:
+ *       authcookie, and account name.
+ *
+ * XML outputs:
+ *       fault 1 - insufficient parameters
+ *       fault 3 - unknown user
+ *       fault 15 - validation failed
+ *       default - success message
+ *
+ * Side Effects:
+ *       an authcookie ticket is renewed, or destroyed if it had already expired.
+ */
+static int
+xmlrpcmethod_renew(void *conn, int parc, char *parv[])
+{
+	struct authcookie *ac;
+	struct myuser *mu;
+
+	if (parc < 2)
+	{
+		xmlrpc_generic_error(fault_needmoreparams, "Insufficient parameters.");
+		return 0;
+	}
+
+	if ((mu = myuser_find(parv[1])) == NULL)
+	{
+		xmlrpc_generic_error(fault_nosuch_source, "Unknown user.");
+		return 0;
+	}
+
+	if (authcookie_validate(parv[0], mu, &ac) == false)
+	{
+		xmlrpc_generic_error(fault_badauthcookie, "Invalid authcookie for this account.");
+		return 0;
+	}
+
+	logcommand_external(nicksvs.me, "xmlrpc", conn, NULL, mu, CMDLOG_LOGIN, "RENEW");
+
+	authcookie_renew(ac);
+
+	xmlrpc_send_string("Authcookie renewed successfully.");
+
+	return 0;
+}
+
 /* atheme.logout
  *
  * XML inputs:
@@ -260,7 +307,7 @@ xmlrpcmethod_logout(void *conn, int parc, char *parv[])
 		return 0;
 	}
 
-	if (authcookie_validate(parv[0], mu) == false)
+	if (authcookie_validate(parv[0], mu, &ac) == false)
 	{
 		xmlrpc_generic_error(fault_badauthcookie, "Invalid authcookie for this account.");
 		return 0;
@@ -268,7 +315,6 @@ xmlrpcmethod_logout(void *conn, int parc, char *parv[])
 
 	logcommand_external(nicksvs.me, "xmlrpc", conn, NULL, mu, CMDLOG_LOGIN, "LOGOUT");
 
-	ac = authcookie_find(parv[0], mu);
 	authcookie_destroy(ac);
 
 	xmlrpc_send_string("You are now logged out.");
@@ -323,7 +369,7 @@ xmlrpcmethod_command(void *conn, int parc, char *parv[])
 			return 0;
 		}
 
-		if (authcookie_validate(parv[0], mu) == false)
+		if (authcookie_validate(parv[0], mu, NULL) == false)
 		{
 			xmlrpc_generic_error(fault_badauthcookie, "Invalid authcookie for this account.");
 			return 0;
@@ -417,7 +463,7 @@ xmlrpcmethod_privset(void *conn, int parc, char *parv[])
 			return 0;
 		}
 
-		if (authcookie_validate(parv[0], mu) == false)
+		if (authcookie_validate(parv[0], mu, NULL) == false)
 		{
 			xmlrpc_generic_error(fault_badauthcookie, "Invalid authcookie for this account.");
 			return 0;
@@ -575,6 +621,7 @@ mod_init(struct module *const restrict m)
 	xmlrpc_set_options(XMLRPC_HTTP_HEADER, XMLRPC_OFF);
 	xmlrpc_register_method("atheme.login", xmlrpcmethod_login);
 	xmlrpc_register_method("atheme.logout", xmlrpcmethod_logout);
+	xmlrpc_register_method("atheme.renew", xmlrpcmethod_renew);
 	xmlrpc_register_method("atheme.command", xmlrpcmethod_command);
 	xmlrpc_register_method("atheme.privset", xmlrpcmethod_privset);
 	xmlrpc_register_method("atheme.ison", xmlrpcmethod_ison);
@@ -588,6 +635,7 @@ mod_deinit(const enum module_unload_intent ATHEME_VATTR_UNUSED intent)
 
 	xmlrpc_unregister_method("atheme.login");
 	xmlrpc_unregister_method("atheme.logout");
+	xmlrpc_unregister_method("atheme.renew");
 	xmlrpc_unregister_method("atheme.command");
 	xmlrpc_unregister_method("atheme.privset");
 	xmlrpc_unregister_method("atheme.ison");
