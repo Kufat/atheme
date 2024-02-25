@@ -43,6 +43,7 @@ SRCS   =                    \
     main.c                  \
     mark.c                  \
     multimark.c             \
+    pronouns.c              \
     pwquality.c             \
     register.c              \
     regnolimit.c            \

@@ -1,7 +1,7 @@
 Help for GENDER:
 
 GENDER sets or clears gender identify information associated with
-your account, which will be visible in your WHOIS and &nick& INFO 
+your account, which will be visible in your WHOIS and &nick& INFO
 information. The information you enter will be prfixed with "identifies as:"
 when displayed; do not enter this part.
 
@@ -20,5 +20,5 @@ ExampleUser2 identifies as: gender non-conforming
 Example of clearing gender information:
     /msg &nick& GENDER
 
-04,01WARNING: Adding joke or offensive information will result in 
+04,01WARNING: Adding joke or offensive information will result in
 disciplinary action.
